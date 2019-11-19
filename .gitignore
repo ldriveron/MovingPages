@@ -1,0 +1,24 @@
+#API key file
+p_k.json
+
+#Packages
+venv/
+lib
+lib6
+
+#IDE files
+.idea/
+
+#Misc
+.installed.cfg
+develop-eggs
+dist
+downloads
+eggs
+parts
+src/*.egg-info
+*.pyc
+*.pyo
+
+#Mac folders
+.DS_Store

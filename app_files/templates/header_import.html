@@ -1,0 +1,26 @@
+<a href="/"><div class="app_title">{{app_name}}</div></a> <!--app name that comes from python app-->
+    <div class="search_holder">
+        <!--main form for user book search-->
+        <form class="main_search" name="main_search" method="POST"  action="{{url_for('search_for_adaptation')}}">
+            <input required type="search" name="search"  id="search" class="search_box"
+            {% if search == None %}
+                placeholder = "Search for a book..."
+            {% else %}
+                value = "{{search}}"
+            {% endif %}> <!--if there is no search made yet, show default placeholder, else fill with current search term-->
+            <input type="submit" value="SEARCH" class="search_button">
+        </form>
+        <div id="suggestions" class="suggestions_holder"></div>
+    </div>
+    <div class="recent_searches"> <!--show the five most recent searches-->
+        <div class="recent_searches_header">Recent</div>
+        {% for previous in previous_searches %}
+                <form name="main_search" method="POST" action="{{url_for('search_for_adaptation')}}">
+                    <input type="hidden" name="search" value="{{previous}}">
+                    <input type="submit" class="recent_text_button" value="{{previous}}">
+                </form>
+        {% endfor %}
+    </div>
+<form name="main_search" method="POST" action="{{url_for('search_for_adaptation')}}?random=1">
+        <input type="submit" class="random_button" value="Random Book">
+</form>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include "resources_import.html" %}
+
+    <title>Redirecting...</title>
+</head>
+<body>
+    {% include "header_import.html" %}
+
+    <div class="connect_to_gr">
+            <a href="#">Connect to Goodreads</a><br><br>
+            This may take a few minutes,<br>based on your Read list.<br><br>
+            <div class="searching_button">Searching...</div>
+            <div id="loader" class="lds-ellipsis" style="display: inline-block">
+                <div></div><div></div><div></div><div></div></div>
+    </div>
+
+    {% include "explain_box_import.html" %}
+    {% include "footer_import.html" %}
+
+<script>
+    //check if cookies are enabled in the browser
+    //if they are, continue with the authentication
+    //if not, then show status message to user
+    if (navigator.cookieEnabled)
+    {
+        {% if oauth_token == None %}
+            window.location.replace("{{url}}");
+        {% else %}
+            window.location.replace("/gr_result?oauth_token={{oauth_token}}&authorize=1");
+        {% endif %}
+    }else{
+        window.location.replace("{{url_for('index')}}?cookies_disabled=1");
+    }
+</script>
+</body>
+</html>

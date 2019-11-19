@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include "resources_import.html" %}
+
+    <title>{{app_name}}</title>
+</head>
+<body>
+    {% include "header_import.html" %}
+
+    <!--if a book is not found or both movie and tv show not found, show status-->
+    {% if status_num == 1 or status_num == 4 or status_num == 6 %}
+        <div class="status_box"><h class="status_exclamation">!</h> {{status_msg}}</div>
+        <div class="connect_to_gr">
+            <a href="/gr_init" onclick="authenticate();">Connect to Goodreads</a><br>
+            <div id="loader" class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+            <script>
+                function authenticate() {
+                    document.getElementById('loader').style.display="inline-block";
+                }
+            </script>
+        </div>
+    {% else %}
+        <div class="list_adaptations_title">YOUR BOOKS WITH ADAPTATIONS</div>
+        {% for book_data in users_books[1:] %}
+        <div class="book_result"> <!--show book data from result if a search was made-->
+            <div class="image_holder" style="width: 140px;">
+                <a href="https://www.goodreads.com/book/show/{{book_data["book"]["id"]}}" target="_blank">
+                <img class="result_image" src="{{book_data["book"]["img"]}}"></a>
+                <a href="{{book_data["book"]["author_url"]}}" target="_blank">
+            </div>
+            <!--show book data-->
+            <div class="detail_holder_flex">
+                <div class="links_holder"> <!--hold multiple links for goodreads, amazon, etc...-->
+                    <a href="{{book_data["book"]["goodreads_url"]}}" target="_blank">
+                        <div class="link_button">Goodreads</div></a>
+                    <!--show only if ISBN found-->
+                    {% if book_data["book"]["isbn_10"] != None and book_data["book"]["isb_13"] != None %}
+                    <a href="https://www.amazon.com/dp/{{book_data["book"]["isbn_10"]}}" target="_blank">
+                        <div class="link_button">Amazon</div></a>
+                    <a href="http://www.barnesandnoble.com/s/{{book_data["book"]["isbn_13"]}}" target="_blank">
+                        <div class="link_button">Barnes and Noble</div></a>
+                    <a href="https://books.google.com/books?vid=ISBN{{book_data["book"]["isbn_10"]}}" target="_blank">
+                        <div class="link_button">Google Books</div></a>
+                    {% endif %}
+                </div>
+                <div class="result_name"><div class="result_detail_title">Title</div>{{book_data["book"]["name"]}}</div>
+                <a href="{{book_data["book"]["author_url"]}}" target="_blank">
+                    <div class="author_image" style="background-image: url({{book_data["book"]["author_img"]}});"></div>
+                </a>
+                <div class="result_detail" style="width: 60%;">
+                    <div class="result_detail_title">Author</div>{{book_data["book"]["author"]}}
+                </div>
+                <div class="result_detail"><div class="result_detail_title">Average Rating</div>
+                    <span id="stars_book{{book_data["book"]["id"]}}"></span>({{book_data["book"]["rating"]}})</div>
+                <script type="text/javascript">
+                    document.getElementById("stars_book{{book_data["book"]["id"]}}").innerHTML =
+                                                                        getStarsBook({{book_data["book"]["rating"]}});
+                    function getStarsBook(rating) {
+                        // Round to nearest half
+                        rating = Math.round(rating * 2) / 2;
+                        let output = [];
+                        // Append all the filled whole stars
+                        for (var i = rating; i >= 1; i--)
+                            output.push('<i class="fa fa-star" aria-hidden="true" style="color: rgb(245, 166, 36);"></i>&nbsp;');
+                        // If there is a half a star, append it
+                        if (i == .5) output.push('<i class="fa fa-star-half-o" aria-hidden="true" style="color: rgb(245, 166, 36);"></i>&nbsp;');
+                        // Fill the empty stars
+                        for (let i = (5 - rating); i >= 1; i--)
+                            output.push('<i class="fa fa-star-o" aria-hidden="true" style="color: #737373;"></i>&nbsp;');
+                        return output.join('');
+                    }
+                </script>
+                <div class="result_detail"><div class="result_detail_title">Publication Year</div>
+                                                                    {{book_data["book"]["year"]}}</div>
+                <div class="result_detail"><div class="result_detail_title">Pages</div>
+                    {% if book_data["book"]["pages"] == None %}
+                        Unlisted
+                    {% else %}
+                        {{book_data["book"]["pages"]}}
+                    {% endif %}
+                </div>
+            </div>
+            <button id="expand{{book_data["book"]["id"]}}" class="expand_adaptations">
+                                View Adaptations For {{book_data["book"]["name_split"]}}</button>
+            <script type="text/javascript">
+                $('#expand{{book_data["book"]["id"]}}').click(function() {
+                    $('#results{{book_data["book"]["id"]}}').toggle('slow');
+                });
+            </script>
+        </div>
+        <div id="results{{book_data["book"]["id"]}}" style="display: none;">
+        {% if book_data["movie_match"] == True %}
+        <div class="adaptation_result"> <!--show movie results-->
+            <div class="found_title_adaptation">MOVIE</div>
+            <div class="image_holder">
+                <a href="https://www.themoviedb.org/movie/{{book_data["movie"]["id"]}}" target="_blank">
+                <img class="result_image_large" src="https://image.tmdb.org/t/p/w500{{book_data["movie"]["poster_path"]}}">
+                </a>
+            </div>
+            <div class="detail_holder_flex">
+                <div class="links_holder"> <!--hold multiple links for trailer, amazon, etc...-->
+                    {% if book_data["movie"]["movie_youtube_id"] == None %}
+                        <div class="link_button">No Trailer</div>
+                    {% else %}
+                        <a href="http://youtube.com/watch?v={{book_data["movie"]["movie_youtube_id"]}}"
+                                                                    class="link_button" target="_blank">View Trailer</a>
+                    {% endif %}
+                    <a href="https://www.themoviedb.org/movie/{{book_data["movie"]["id"]}}" target="_blank">
+                        <div class="link_button">TMDb</div></a>
+                </div>
+                <div class="result_name"><div class="result_detail_title">Title</div>
+                                                                        {{book_data["movie"]["original_title"]}}</div>
+                <div class="result_detail"><div class="result_detail_title">Language</div>
+                                                                        {{book_data["movie"]["original_language"]}}</div>
+                <div class="result_detail"><div class="result_detail_title">Average Rating</div>
+                    <span id="stars_movie{{book_data["movie"]["id"]}}"></span>({{book_data["movie"]["vote_average"]}})</div>
+                <script type="text/javascript">
+                    document.getElementById("stars_movie{{book_data["movie"]["id"]}}").innerHTML
+                    = getStarsMovie({{book_data["movie"]["vote_average"]}});
+                    function getStarsMovie(rating) {
+                        // Round to nearest half
+                        rating = Math.round(rating * 2) / 2;
+                        let output = [];
+                        // Append all the filled whole stars
+                        for (var i = rating; i >= 1; i--)
+                            output.push('<i class="fa fa-star" aria-hidden="true" style="color: rgb(245, 166, 36);"></i>&nbsp;');
+                        // If there is a half a star, append it
+                        if (i == .5) output.push('<i class="fa fa-star-half-o" aria-hidden="true" style="color: rgb(245, 166, 36);"></i>&nbsp;');
+                        // Fill the empty stars
+                        for (let i = (10 - rating); i >= 1; i--)
+                            output.push('<i class="fa fa-star-o" aria-hidden="true" style="color: #737373;"></i>&nbsp;');
+                        return output.join('');
+                    }
+                </script>
+                <div class="result_detail"><div class="result_detail_title">Release Date</div>
+                    {% if book_data["movie"]["release_date"] == "" %}
+                        Not Released
+                    {% else %}
+                        {{book_data["movie"]["release_date"]}}
+                    {% endif %}
+                </div>
+                <div class="overview">
+                    {{book_data["movie"]["overview"]}}
+                </div>
+                <div class="actors_list">
+                    {% for actor in book_data["movie"]["credits"][0] %}
+                        <div class="actor">
+                            <img src="{{actor["profile_path"]}}"><br>
+                            <font style="font-weight: bold; font-size: 16px;">{{actor["name"]}}</font><br>
+                            {{actor["character"]}}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if book_data["tv_match"] == True %}
+        <div class="adaptation_result"> <!--show movie results-->
+            <div class="found_title_adaptation">TV SHOW</div>
+            <div class="image_holder">
+                <a href="https://www.themoviedb.org/movie/{{book_data["tv_show"]["id"]}}" target="_blank">
+                <img class="result_image_large" src="https://image.tmdb.org/t/p/w500{{book_data["tv_show"]["poster_path"]}}">
+                </a>
+            </div>
+            <div class="detail_holder_flex">
+                <div class="links_holder"> <!--hold multiple links for trailer, amazon, etc...-->
+                    {% if book_data["tv_show"]["tv_youtube_id"] == None %}
+                        <div class="link_button">No Trailer</div>
+                    {% else %}
+                        <a href="http://youtube.com/watch?v={{book_data["tv_show"]["tv_youtube_id"]}}" class="link_button" target="_blank">View Trailer</a>
+                    {% endif %}
+                    <a href="https://www.themoviedb.org/tv/{{book_data["tv_show"]["id"]}}" target="_blank">
+                        <div class="link_button">TMDb</div></a>
+                </div>
+                <div class="result_name"><div class="result_detail_title">Title</div>{{book_data["tv_show"]["original_name"]}}</div>
+                <div class="result_detail"><div class="result_detail_title">Language</div>{{book_data["tv_show"]["original_language"]}}</div>
+                <div class="result_detail"><div class="result_detail_title">Average Rating</div>
+                    <span id="stars_tv{{book_data["tv_show"]["id"]}}"></span>({{book_data["tv_show"]["vote_average"]}})</div>
+                <script type="text/javascript">
+                    document.getElementById("stars_tv{{book_data["tv_show"]["id"]}}").innerHTML
+                    = getStarsTV({{book_data["tv_show"]["vote_average"]}});
+                    function getStarsTV(rating) {
+                        // Round to nearest half
+                        rating = Math.round(rating * 2) / 2;
+                        let output = [];
+                        // Append all the filled whole stars
+                        for (var i = rating; i >= 1; i--)
+                            output.push('<i class="fa fa-star" aria-hidden="true" style="color: rgb(245, 166, 36);"></i>&nbsp;');
+                        // If there is a half a star, append it
+                        if (i == .5) output.push('<i class="fa fa-star-half-o" aria-hidden="true"  style="color: rgb(245, 166, 36);"></i>&nbsp;');
+                        // Fill the empty stars
+                        for (let i = (10 - rating); i >= 1; i--)
+                            output.push('<i class="fa fa-star-o" aria-hidden="true" style="color: #737373;"></i>&nbsp;');
+                        return output.join('');
+                    }
+                </script>
+                <div class="result_detail"><div class="result_detail_title">Release Date</div>
+                    {% if book_data["tv_show"]["first_air_date"] == "" %}
+                        Not Released
+                    {% else %}
+                        {{book_data["tv_show"]["first_air_date"]}}
+                    {% endif %}
+                </div>
+                <div class="overview">
+                    {{book_data["tv_show"]["overview"]}}
+                </div>
+                <div class="actors_list">
+                    {% for actor in book_data["tv_show"]["credits"][0] %}
+                        <div class="actor">
+                            <img src="{{actor["profile_path"]}}"><br>
+                            <font style="font-weight: bold; font-size: 16px;">{{actor["name"]}}</font><br>
+                            {{actor["character"]}}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    {% include "explain_box_import.html" %}
+    {% include "footer_import.html" %}
+</body>
+</html>
