@@ -16,36 +16,44 @@ def request_book(search_term):  # search for book via GoodReads API
     gr_xml = requests.get(gr_url)  # get book information xml result
     gr_result = ElementTree.fromstring(gr_xml.content)
     book_result = {}  # empty dictionary
-    # XML order goes like this: [search][results][work][...]
     try:
+        current_top = 0
         if gr_result[1][3].text != "0":
-            book_result["total"] = 1
-            book_result["id"] = gr_result[1][6][0][8][0].text  # useful for other Goodreads API requests
-            book_result["name"] = gr_result[1][6][0][8][1].text
-            book_result["author"] = gr_result[1][6][0][8][2][1].text
-            book_result["year"] = gr_result[1][6][0][4].text
-            book_result["rating"] = gr_result[1][6][0][7].text
-            book_result["author_name_clean"] = book_result["author"].replace(" ",
-                                                                             "")  # get rid of spaces in author name
-            book_result["name_split"] = book_result["name"].split('(', 1)[0]  # if book title includes series name
-            # and number, remove it
-            book_result["img"] = gr_result[1][6][0][8][3].text
-            book_result["goodreads_url"] = "https://www.goodreads.com/book/show/{0}".format(book_result["id"])
+            # find most popular book in the results
+            for result in gr_result[1][6].findall('work'):
+                if int(result[2].text) > current_top:
+                    current_top = int(result[2].text)
+            # put most popular result as the book result
+            for result in gr_result[1][6].findall('work'):
+                if int(result[2].text) == current_top:
+                    book_result["total"] = 1
+                    # useful for other Goodreads API requests
+                    book_result["id"] = result.find('best_book').find('id').text
+                    book_result["name"] = result.find('best_book').find('title').text
+                    book_result["author"] = result.find('best_book').find('author').find('name').text
+                    book_result["year"] = result.find('original_publication_year').text
+                    book_result["rating"] = result.find('average_rating').text
+                    # get rid of spaces in author name
+                    book_result["author_name_clean"] = book_result["author"].replace(" ", "")
+                    # if book title includes series name and number, remove it
+                    book_result["name_split"] = book_result["name"].split('(', 1)[0]
+                    book_result["img"] = result.find('best_book').find('image_url').text
+                    book_result["goodreads_url"] = "https://www.goodreads.com/book/show/{0}".format(book_result["id"])
 
-            gr_isbn_url = "https://www.goodreads.com/book/show/{0}.xml?key={1}".format(book_result["id"],
-                                                                                       gr_key)
-            gr_xml = requests.get(gr_isbn_url)  # using this to get the book's ISBN10 and ISBN13
-            gr_result = ElementTree.fromstring(gr_xml.content)
-            book_result["isbn_10"] = gr_result[1][2].text
-            book_result["isbn_13"] = gr_result[1][3].text
-            book_result["pages"] = gr_result[1][19].text
-            book_result["author_img"] = gr_result[1][26][0][3].text
-            book_result["author_url"] = gr_result[1][26][0][5].text
+                    gr_isbn_url = "https://www.goodreads.com/book/show/{0}.xml?key={1}".format(book_result["id"],
+                                                                                               gr_key)
+                    gr_xml = requests.get(gr_isbn_url)  # using this to get the book's ISBN10 and ISBN13
+                    gr_result = ElementTree.fromstring(gr_xml.content)
+                    book_result["isbn_10"] = gr_result[1][2].text
+                    book_result["isbn_13"] = gr_result[1][3].text
+                    book_result["pages"] = gr_result[1][19].text
+                    book_result["author_img"] = gr_result[1][26][0][3].text
+                    book_result["author_url"] = gr_result[1][26][0][5].text
+                    break
         else:
             book_result["total"] = 0
     except IndexError as e:
         book_result["total"] = 0
-
     return book_result
 
 

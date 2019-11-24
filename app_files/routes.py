@@ -1,7 +1,7 @@
 import xml, collections
 from rauth import OAuth1Service
 import oauth2 as oauth
-from app_files import app, API_functions, data_functions, json_functions
+from app_files import app, API_functions, data_functions, json_functions, movingpages_api
 from flask import render_template, request, redirect, url_for, make_response
 from xml.dom.minidom import *
 
