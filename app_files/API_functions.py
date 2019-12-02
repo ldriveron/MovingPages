@@ -5,9 +5,9 @@ from app_files import json_functions, data_functions
 from lxml import etree
 
 # Goodreads API functions
-gr_key = json_functions.read_data("p_k.json")
-gr_secret = gr_key["gr_secret"]
-gr_key = gr_key["gr"]  # get Goodreads key
+keys = json_functions.read_data("p_k.json")
+gr_secret = keys["gr_secret"]
+gr_key = keys["gr"]  # get Goodreads key
 
 
 def request_book(search_term):  # search for book via GoodReads API
@@ -115,8 +115,7 @@ def get_users_books(user_id, client):  # much faster now. average ~58 seconds fo
 
 
 # TheMovieDB API Functions
-mdb_key = json_functions.read_data("p_k.json")
-mdb_key = mdb_key["the_movie_db"]  # get mdb key
+mdb_key = keys["the_movie_db"]  # get mdb key
 
 
 def request_movie(book_name, author_name_clean, source):  # search for movie via TheMovieDB API

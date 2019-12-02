@@ -113,7 +113,7 @@ goodreads = OAuth1Service(
 def gr_result():
     status_msg = ""
     status_num = 0
-    client = 0
+    # client = 0
     user_id = 0
     users_books = []
 
