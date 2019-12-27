@@ -11,6 +11,19 @@ previous_searches = collections.deque()  # deque for five most recent searches
 
 @app.route('/')
 def index():
+    """This method is called when navigating to the root '/' of the website.
+
+    Args:
+        None.
+
+    Raises:
+        None.
+
+    Returns:
+        render_template using the 'index.html' and populating it with default values for book_name, app_name,
+        search, status_msg, and previous_searches
+    """
+
     # if cookies are disabled, "cookies_disabled" will = 1
     # show status message to user that they need to be enabled for Goodreads authentication
     if request.args.get("cookies_disabled") == "1":
@@ -27,6 +40,32 @@ def index():
 
 @app.route('/', methods=['POST'])  # this method is called when form is submitted
 def search_for_adaptation():
+    """This method is called when navigating to the root '/' of the website with a POST request.
+
+    If there is an 'random' argument in the url and it is set to '1', then a random book is requested by using the
+    get_random_book() method from data_functions import.
+
+    Else, this method uses the user input search request. Using this input, a search is made to the Goodreads API
+    to find a matching book. With the matching book, a matching movie and tv show is located.
+
+    Once the three searches (book, movie, tv show) are complete, 'index.html' is again rendered with updated data.
+
+    The 'status_msg' and 'status_num' variables are used to indicate the current status of the search.
+    0 = no error, 1 = no book found, 2 = no movie found, 3 = no tv show found, 4 = no adaptation found.
+
+    If a matching adaptation is found for the book, then the search term is appended to the previous_search deque.
+
+    Args:
+        None.
+
+    Raises:
+        None.
+
+    Returns:
+        render_template using the 'index.html' and populating it with found book, movie, and tv show data or a status
+        message, if required.
+    """
+
     book_id = 0
     # variables for status results; 0 for no error, 1 for no book found, 2 for no movie found,
     # 3 for no tv show found, 4 for no tv show and movie found
@@ -111,9 +150,29 @@ goodreads = OAuth1Service(
 
 @app.route('/gr_result')  # route after authenticating the user on Goodreads (user will go here second)
 def gr_result():
+    """This function is called after the user is redirected to the 'gr_result' route.
+
+    After the user is authenticated using Goodreads OAuth, the cookies previous set are retrieved and used as
+    the current session to the user. Using Goodreads API methods, the users Goodreads ID is retrieved and used
+    to search for the users Read books by using the 'get_users_books' method from API_functions import.
+
+    After the books and adaptations list is obtained, it is rendered using the 'gr_result.html' page.
+
+    The status message number 6 is used in case the users Read books have no adaptations.
+
+    Args:
+        None.
+
+    Raises:
+        None.
+
+    Returns:
+        render_template using the 'gr_result.html' and populating it with the book and adaptations results from the
+        users Goodreads Read list
+    """
+
     status_msg = ""
     status_num = 0
-    # client = 0
     user_id = 0
     users_books = []
 
@@ -158,6 +217,27 @@ def gr_result():
 
 @app.route("/gr_init")
 def gr_init():  # method to establish auth and create cookies (user will go here first)
+    """When the user clicks on the Connect to Goodreads button, they are redirected to the 'gr_init' route.
+
+    Using the MovingPages application session, a new token is requested from Goodreads API. A url for the user to
+    navigate to is generated. The 'gr_result.html' template is rendered and will redirect the user to the
+    Goodreads OAuth authorization url.
+
+    After the user is redirected back to MovingPages after logging in on Goodreads and authorizing the application, the
+    'gr_result.html' template is rendered and will redirect the user to the 'gr_result.html' route so the
+    generated session could be used to get the users Goodreads Read book and find matching adaptations.
+
+    Args:
+        None.
+
+    Raises:
+        None.
+
+    Returns:
+        render_template using the 'gr_redirect.html' and using it to redirect the user to the Goodreads
+        authorization url or 'gr_result.html' route.
+    """
+
     if request.args.get("authorize") != "1":
         request_token, request_token_secret = goodreads.get_request_token(header_auth=True)  # request a token to use
 

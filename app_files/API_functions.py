@@ -4,15 +4,30 @@ from xml.etree import ElementTree
 from app_files import json_functions, data_functions
 from lxml import etree
 
-# Goodreads API functions
+# open json file holding Goodreads API keys, TheMovieDB API key
 keys = json_functions.read_data("p_k.json")
+
+# Goodreads API functions
 gr_secret = keys["gr_secret"]
 gr_key = keys["gr"]  # get Goodreads key
 
 
 def request_book(search_term):  # search for book via GoodReads API
+    """This function uses the search term entered by the user to find a book with the use of Goodreads API.
+
+    Args:
+        search_term (str): This argument is used when searching for a book with the use of Goodreads API.
+
+    Raises:
+        IndexError: Index not found in the XML received from Goodreads.
+
+    Returns:
+        book_result: A dictionary with book data picked from the XML result received from Goodreads.
+    """
+
     gr_url = "https://www.goodreads.com/search/index.xml?key={0}&q={1}".format(gr_key,
                                                                                search_term)  # api call to Goodreads
+
     gr_xml = requests.get(gr_url)  # get book information xml result
     gr_result = ElementTree.fromstring(gr_xml.content)
     book_result = {}  # empty dictionary
@@ -54,11 +69,26 @@ def request_book(search_term):  # search for book via GoodReads API
             book_result["total"] = 0
     except IndexError as e:
         book_result["total"] = 0
+
     return book_result
 
 
 # get the user's read books from Goodreads after authenticating
 def get_users_books(user_id, client):  # much faster now. average ~58 seconds for 109 books
+    """This function uses session created between the MovingPages application and the Goodreads user to retrieve
+    all their Read books and search for adaptations for each.
+
+    Args:
+        user_id (int): This argument is used to get the users Read books by using the Goodreads API.
+        client (object): This argument is the generated session between MovingPages and the Goodreads user.
+
+    Raises:
+        AttributeError: Attribute not found in the JSON data received from Goodreads.
+
+    Returns:
+        books: A dictionary containing all the books found with matching adaptations.
+    """
+
     books = []  # list for books
     url = 'http://www.goodreads.com'
     response, content = client.request('{0}/review/list/{1}.xml?key={2}&v=2'  # get the user's read shelf
@@ -92,7 +122,7 @@ def get_users_books(user_id, client):  # much faster now. average ~58 seconds fo
             except (AttributeError, TypeError) as e:
                 # if the xml above has issues getting the data, revert back to normal request_book method
                 compare_book = request_book(book.find('book').find('title_without_series').text)
-            print(compare_book["name_split"])
+            # print(compare_book["name_split"])
             movie = request_movie(compare_book["name_split"], compare_book["author_name_clean"], 1)
             if movie["total_results"] != 0:  # check for a movie result
                 movie_match = True
@@ -116,9 +146,27 @@ def get_users_books(user_id, client):  # much faster now. average ~58 seconds fo
 
 # TheMovieDB API Functions
 mdb_key = keys["the_movie_db"]  # get mdb key
+proxies = {
+    "http": None,
+    "https": None,
+}
 
 
 def request_movie(book_name, author_name_clean, source):  # search for movie via TheMovieDB API
+    """This function is used to find a movie from TheMovieDB based on a book name.
+
+    Args:
+        book_name (str): This argument is used to search TheMovieDB for a matching adaptation.
+        author_name_clean (str): This argument is used to make sure the book author has a credit in the movie.
+        source (int): This argument is used to know where the search comes from and change result based on source.
+
+    Raises:
+        KeyError: Attribute not found in the JSON data received from TheMovieDB.
+
+    Returns:
+        movie_result: A dictionary containing the movie result.
+    """
+
     moviedb_movie_url = "https://api.themoviedb.org/3/search/movie?api_key={0}&language=en-US" \
                         "&query={1}&page=1&include_adult=false".format(mdb_key,
                                                                        book_name)  # this is the url for movie search
@@ -130,7 +178,7 @@ def request_movie(book_name, author_name_clean, source):  # search for movie via
             movie_credits = request_movie_credits(top_result["id"])
             if not data_functions.validate_writer(movie_credits, author_name_clean):
                 movie_result["total_results"] = 0
-                return movie_result # stop here if book writer is not credited in the movie
+                return movie_result  # stop here if book writer is not credited in the movie
             try:
                 movie_result = {"id": top_result["id"], "original_title": top_result["original_title"],
                                 "poster_path": top_result["poster_path"],
@@ -148,11 +196,24 @@ def request_movie(book_name, author_name_clean, source):  # search for movie via
             movie_result["total_results"] = 0
     except KeyError as e:
         movie_result["total_results"] = 0
-
     return movie_result
 
 
 def request_movie_details(movie_id):  # get details of the movie
+    """This function is used to find movie details from TheMovieDB based on a movie id.
+
+    The details gathered are: production companies, genre, and IMDB ID.
+
+    Args:
+        movie_id (int): This argument is used to search TheMovieDB movie details.
+
+    Raises:
+        KeyError: Attribute not found in the JSON data received from TheMovieDB.
+
+    Returns:
+        detail_result_final: A dictionary containing the movie details result.
+    """
+
     movie_detail_url = "https://api.themoviedb.org/3/movie/{0}?api_key={1}".format(movie_id,
                                                                                    mdb_key)  # details movie search url
 
@@ -174,6 +235,18 @@ def request_movie_details(movie_id):  # get details of the movie
 
 
 def request_movie_trailer(movie_id):  # search for movie trailer Youtube ID via TheMovieDB API
+    """This function is used to find a movie trailer from TheMovieDB based on a movie id.
+
+    Args:
+        movie_id (str): This argument is used to search TheMovieDB for a matching trailer.
+
+    Raises:
+        KeyError: Attribute not found in the JSON data received from TheMovieDB.
+
+    Returns:
+        movie_youtube_id: A string containing the trailers YouTube ID.
+    """
+
     moviedb_movie_trailer_url = "http://api.themoviedb.org/3/movie/{0}/videos?api_key={1}".format(movie_id, mdb_key)
 
     try:
@@ -189,6 +262,18 @@ def request_movie_trailer(movie_id):  # search for movie trailer Youtube ID via 
 
 
 def request_movie_credits(movie_id):  # search for TV show credits via TheMovieDB API
+    """This function is used to find movie credits from TheMovieDB based on a movie id.
+
+    Args:
+        movie_id (str): This argument is used to search TheMovieDB for movie credits.
+
+    Raises:
+        KeyError: Attribute not found in the JSON data received from TheMovieDB.
+
+    Returns:
+        final_credits: An array containing writing credits and the top 3 acting credits for the movie.
+    """
+
     moviedb_movie_credits = "https://api.themoviedb.org/3/movie/{0}/credits?api_key={1}&language=en-US".format(movie_id,
                                                                                                                mdb_key)
 
@@ -204,10 +289,10 @@ def request_movie_credits(movie_id):  # search for TV show credits via TheMovieD
             # add the top three actors in the movie
             for actor in range(3):
                 final_credits[0].append({"name": movie_credits_results["cast"][actor]["name"],
-                                           "character": movie_credits_results["cast"][actor]["character"],
-                                           "profile_path": "https://image.tmdb.org/t/p/w500{0}"
-                                               .format(movie_credits_results["cast"][actor]["profile_path"]),
-                                           "id": movie_credits_results["cast"][actor]["id"]})
+                                         "character": movie_credits_results["cast"][actor]["character"],
+                                         "profile_path": "https://image.tmdb.org/t/p/w500{0}"
+                                        .format(movie_credits_results["cast"][actor]["profile_path"]),
+                                         "id": movie_credits_results["cast"][actor]["id"]})
                 # if the actors image does not exist, then replace it with a default
                 if not data_functions.url_exists(final_credits[0][actor]["profile_path"]):
                     final_credits[0][actor]["profile_path"] = "../static/actor_no_img.png"
@@ -218,6 +303,20 @@ def request_movie_credits(movie_id):  # search for TV show credits via TheMovieD
 
 
 def request_tv_show(book_name, author_name_clean, source):  # search for TV show via TheMovieDB API
+    """This function is used to find a tv show from TheMovieDB based on a book name.
+
+    Args:
+        book_name (str): This argument is used to search TheMovieDB for a matching adaptation.
+        author_name_clean (str): This argument is used to make sure the book author has a credit in the tv show.
+        source (int): This argument is used to know where the search comes from and change result based on source.
+
+    Raises:
+        KeyError: Attribute not found in the JSON data received from TheMovieDB.
+
+    Returns:
+        tv_result: A dictionary containing the tv show result.
+    """
+
     moviedb_tv_url = "https://api.themoviedb.org/3/search/tv?api_key={0}&query={1}" \
                      "&language=en-US&page=1".format(mdb_key, book_name)  # this is the url for tv show search
 
@@ -228,7 +327,7 @@ def request_tv_show(book_name, author_name_clean, source):  # search for TV show
             tv_credits = request_tv_credits(top_result["id"])
             if not data_functions.validate_writer(tv_credits, author_name_clean):
                 tv_result["total_results"] = 0
-                return tv_result # stop here if book writer is not credited in the tv show
+                return tv_result  # stop here if book writer is not credited in the tv show
             try:
                 tv_result = {"id": top_result["id"], "original_name": top_result["original_name"],
                              "poster_path": top_result["poster_path"],
@@ -250,7 +349,21 @@ def request_tv_show(book_name, author_name_clean, source):  # search for TV show
     return tv_result
 
 
-def request_tv_details(tv_id):  # get details of the tv show [genre, production companies, imdb id]
+def request_tv_details(tv_id):
+    """This function is used to find tv show details from TheMovieDB based on a tv show id.
+
+    The details gathered are: production companies, genre, and IMDB ID.
+
+    Args:
+        tv_id (int): This argument is used to search TheMovieDB tv show details.
+
+    Raises:
+        KeyError: Attribute not found in the JSON data received from TheMovieDB.
+
+    Returns:
+        detail_result: A dictionary containing the tv show details result.
+    """
+
     # details tv show search url
     tv_detail_url = "https://api.themoviedb.org/3/tv/{0}?api_key={1}".format(tv_id, mdb_key)
 
@@ -272,6 +385,18 @@ def request_tv_details(tv_id):  # get details of the tv show [genre, production 
 
 
 def request_tv_trailer(tv_id):  # search for movie trailer Youtube ID via TheMovieDB API
+    """This function is used to find a tv show trailer from TheMovieDB based on a tv show id.
+
+    Args:
+        tv_id (str): This argument is used to search TheMovieDB for a matching trailer.
+
+    Raises:
+        KeyError: Attribute not found in the JSON data received from TheMovieDB.
+
+    Returns:
+        tv_trailer_id: A string containing the trailers YouTube ID.
+    """
+
     moviedb_tv_trailer_url = "http://api.themoviedb.org/3/tv/{0}/videos?api_key={1}".format(tv_id, mdb_key)
 
     try:
@@ -287,6 +412,18 @@ def request_tv_trailer(tv_id):  # search for movie trailer Youtube ID via TheMov
 
 
 def request_tv_credits(tv_id):  # search for TV show credits via TheMovieDB API
+    """This function is used to find tv show credits from TheMovieDB based on a tv show id.
+
+    Args:
+        tv_id (str): This argument is used to search TheMovieDB for tv show credits.
+
+    Raises:
+        KeyError: Attribute not found in the JSON data received from TheMovieDB.
+
+    Returns:
+        final_credits: An array containing writing credits and the top 3 acting credits for the tv show.
+    """
+
     moviedb_tv_credits = "https://api.themoviedb.org/3/tv/{0}/credits?api_key={1}&language=en-US".format(tv_id,
                                                                                                          mdb_key)
 
@@ -302,10 +439,10 @@ def request_tv_credits(tv_id):  # search for TV show credits via TheMovieDB API
             # add the top three actors in the tv show
             for actor in range(3):
                 final_credits[0].append({"name": tv_credits_results["cast"][actor]["name"],
-                                           "character": tv_credits_results["cast"][actor]["character"],
-                                           "profile_path": "https://image.tmdb.org/t/p/w500{0}"
-                                               .format(tv_credits_results["cast"][actor]["profile_path"]),
-                                           "id": tv_credits_results["cast"][actor]["id"]})
+                                         "character": tv_credits_results["cast"][actor]["character"],
+                                         "profile_path": "https://image.tmdb.org/t/p/w500{0}"
+                                        .format(tv_credits_results["cast"][actor]["profile_path"]),
+                                         "id": tv_credits_results["cast"][actor]["id"]})
                 # if the actors image does not exist, then replace it with a default
                 if not data_functions.url_exists(final_credits[0][actor]["profile_path"]):
                     final_credits[0][actor]["profile_path"] = "../static/actor_no_img.png"
