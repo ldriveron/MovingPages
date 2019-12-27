@@ -1,4 +1,4 @@
-#Moving Pages
+# Moving Pages
 By Luis Riveron
 
 Moving pages is used to find screen adaptations for books.
@@ -13,20 +13,20 @@ Moving Pages offers three ways to discover book to screen adaptations:
 By connecting their Goodreads.com account to Moving Pages, the user saves time by not having to manually search every single book on their 'Read List' one at a time.
 Moving Pages does all the work by matching books from the users 'Read List' to screen adaptations.
 
-##Index Page
+## Index Page
 ![Moving Pages Index](Screenshots/MovingPagesIndex.png)
 
-##Result Page
+## Result Page
 ![Moving Pages Search Result](Screenshots/MovingPagesResult.png)
 
-##User Read Books Results
+## User Read Books Results
 ![Moving Pages User Results](Screenshots/MovingPagesUserResults.png)
 
-##Built With
+## Built With
 - Python, Flask
 - HTML5, CSS3, Sass
 - Javascript
 
-###API Used
+### API Used
 - Goodreads.com
 - TheMovieDB.org
