@@ -1,9 +1,9 @@
 #API key file
-#p_k.json
-#config.py
+p_k.json
+config.py
 
 #Packages
-#venv/
+venv/
 lib
 lib6
 
@@ -15,7 +15,7 @@ node_modules
 .vscode
 
 #Misc
-#package-lock.json
+package-lock.json
 .installed.cfg
 develop-eggs
 dist
