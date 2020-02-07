@@ -9,6 +9,14 @@ app_name = "MOVING PAGES"  # name of app so it could be changed
 previous_searches = collections.deque()  # deque for five most recent searches
 
 
+# Add recent searches so it is not empty when server restarts
+previous_searches.appendleft("Pinocchio")
+previous_searches.appendleft("Alice's Adventures in Wonderland")
+previous_searches.appendleft("The Fox and the Hound")
+previous_searches.appendleft("Bambi")
+previous_searches.appendleft("The Hunchback of Notre-Dame")
+
+
 @app.route('/')
 def index():
     """This method is called when navigating to the root '/' of the website.
