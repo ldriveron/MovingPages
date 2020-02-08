@@ -23,7 +23,6 @@ def validate_writer(credits, author_name_clean):  # method to find book author i
         for i in credits[1]:  # find book author as writer credit in tv show
             if i["department"] == "Writing":
                 if i["name"].replace(" ", "") == author_name_clean:
-                    # if author_name_clean.replace(" ", "") == writer_name.replace(" ", ""):
                     # print("Yes, same writer.")
                     return True
     return False  # will return false if author name is never found in credits

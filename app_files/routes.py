@@ -10,11 +10,11 @@ previous_searches = collections.deque()  # deque for five most recent searches
 
 
 # Add recent searches so it is not empty when server restarts
-previous_searches.appendleft("Pinocchio")
-previous_searches.appendleft("Alice's Adventures in Wonderland")
-previous_searches.appendleft("The Fox and the Hound")
-previous_searches.appendleft("Bambi")
-previous_searches.appendleft("The Hunchback of Notre-Dame")
+previous_searches.append("Pinocchio")
+previous_searches.append("Alice's Adventures in Wonderland & Through the Looking-Glass")
+previous_searches.append("The Fox and The Hound")
+previous_searches.append("Bambi")
+previous_searches.append("The Hunchback of Notre-Dame")
 
 
 @app.route('/')

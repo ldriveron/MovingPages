@@ -187,7 +187,7 @@ def request_movie(book_name, author_name_clean, source):  # search for movie via
                                 "overview": top_result["overview"],
                                 "movie_youtube_id": request_movie_trailer(top_result["id"]),
                                 "credits": movie_credits, "total_results": 1}
-                # only including movie details and youtube id if it is for a singular search
+                # only including movie details if it is for a singular search
                 if source == 0:
                     movie_result["movie_details"] = request_movie_details(top_result["id"])
             except KeyError as e:  # if there is a KeyError, just skip the result
@@ -336,7 +336,7 @@ def request_tv_show(book_name, author_name_clean, source):  # search for TV show
                              "overview": top_result["overview"],
                              "tv_youtube_id": request_tv_trailer(top_result["id"]),
                              "credits": tv_credits, "total_results": 1}
-                # only including tv show details, credits, and youtube id if it is for a singular search
+                # only including tv show details if it is for a singular search
                 if source == 0:
                     tv_result["tv_details"] = request_tv_details(top_result["id"])
             except KeyError as e:  # if there is a KeyError, just skip the result
